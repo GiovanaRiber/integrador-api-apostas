@@ -42,12 +42,8 @@ export default function Page() {
   // ── Verificando autenticação inicial ──
   if (autenticado === null) {
     return (
-      <div className="container">
-        <header>
-          <h1>FightBet Hub</h1>
-          <p className="subtitle">Painel Integrador de Apostas e Lutas</p>
-        </header>
-        <div className="panel"><div className="loading">Verificando sessão...</div></div>
+      <div className="login-wrapper">
+        <div className="loading">Iniciando sistema...</div>
       </div>
     );
   }
@@ -55,83 +51,90 @@ export default function Page() {
   // ── Tela de Login Global ──
   if (!autenticado) {
     return (
-      <div className="container">
-        <header>
-          <h1>FightBet Hub</h1>
-          <p className="subtitle">Painel Integrador de Apostas e Lutas</p>
+      <>
+        <header className="main-header">
+          <a href="#" className="header-logo">UFC<span>BET</span></a>
+          <div className="header-auth">
+            <span className="user-badge">Área Restrita</span>
+          </div>
         </header>
-        <div className="panel" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
-          <div className="login-container">
-            <div className="login-card">
-              <div className="login-icon">🔐</div>
-              <h2>Acesso ao Sistema</h2>
-              <p className="login-desc">
-                Faça login para acessar o painel integrador.<br/>
-                O acesso será válido para todas as abas.
-              </p>
-              <form onSubmit={handleLogin} className="login-form">
-                <div className="form-group">
-                  <label>Usuário</label>
-                  <input
-                    id="global-usuario"
-                    required
-                    autoFocus
-                    placeholder="Seu usuário"
-                    value={loginForm.usuario}
-                    onChange={e => setLoginForm({...loginForm, usuario: e.target.value})}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Senha</label>
-                  <input
-                    id="global-senha"
-                    type="password"
-                    required
-                    placeholder="Sua senha"
-                    value={loginForm.senha}
-                    onChange={e => setLoginForm({...loginForm, senha: e.target.value})}
-                  />
-                </div>
-                {loginErro && <div className="login-erro">{loginErro}</div>}
-                <button
-                  type="submit"
-                  className="btn btn-full"
-                  disabled={loginLoading}
-                >
-                  {loginLoading ? 'Autenticando...' : 'Entrar'}
-                </button>
-                <p className="login-hint">
-                  Se não tiver conta, ela será criada automaticamente.
-                </p>
-              </form>
-            </div>
+        
+        <div className="login-wrapper">
+          <div className="login-card">
+            <h2>Acesso Restrito</h2>
+            <p className="login-desc">
+              Painel Integrador de Estatísticas e Apostas UFC.
+            </p>
+            <form onSubmit={handleLogin} className="login-form">
+              <div className="form-group">
+                <label>Usuário</label>
+                <input
+                  id="global-usuario"
+                  required
+                  autoFocus
+                  placeholder="Seu usuário"
+                  value={loginForm.usuario}
+                  onChange={e => setLoginForm({...loginForm, usuario: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>Senha</label>
+                <input
+                  id="global-senha"
+                  type="password"
+                  required
+                  placeholder="Sua senha"
+                  value={loginForm.senha}
+                  onChange={e => setLoginForm({...loginForm, senha: e.target.value})}
+                />
+              </div>
+              {loginErro && <div className="login-erro">{loginErro}</div>}
+              <button
+                type="submit"
+                className="btn btn-full"
+                disabled={loginLoading}
+              >
+                {loginLoading ? 'AUTENTICANDO...' : 'ENTRAR (POST /AUTH/LOGIN)'}
+              </button>
+            </form>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="container">
-      <header>
-        <h1>FightBet Hub</h1>
-        <p className="subtitle">Painel Integrador de Apostas e Lutas</p>
+    <>
+      <header className="main-header">
+        <a href="#" className="header-logo">UFC<span>BET</span></a>
+        <div className="header-auth">
+          <span className="user-badge">🟢 Online</span>
+        </div>
       </header>
 
-      <div className="tabs">
-        <button className={`tab ${activeTab === 'apostadores' ? 'active' : ''}`} onClick={() => setActiveTab('apostadores')}>Apostadores</button>
-        <button className={`tab ${activeTab === 'lutadores' ? 'active' : ''}`} onClick={() => setActiveTab('lutadores')}>Lutadores</button>
-        <button className={`tab ${activeTab === 'lutas' ? 'active' : ''}`} onClick={() => setActiveTab('lutas')}>Lutas</button>
-        <button className={`tab ${activeTab === 'apostas' ? 'active' : ''}`} onClick={() => setActiveTab('apostas')}>Apostas</button>
-      </div>
+      <section className="hero">
+        <div className="hero-content">
+          <div className="hero-subtitle" style={{ fontSize: '2rem' }}>UFC 300</div>
+          <h1 className="hero-title" style={{ fontSize: '6rem' }}>PEREIRA VS HILL</h1>
+        </div>
+      </section>
 
-      <main>
-        {activeTab === 'apostadores' && <ApostadoresPanel />}
-        {activeTab === 'lutadores' && <LutadoresPanel />}
-        {activeTab === 'lutas' && <LutasPanel />}
-        {activeTab === 'apostas' && <ApostasPanel />}
-      </main>
-    </div>
+      <div className="container">
+        <div className="tabs">
+          <button className={`tab ${activeTab === 'apostadores' ? 'active' : ''}`} onClick={() => setActiveTab('apostadores')}>Apostadores</button>
+          <button className={`tab ${activeTab === 'lutadores' ? 'active' : ''}`} onClick={() => setActiveTab('lutadores')}>Lutadores</button>
+          <button className={`tab ${activeTab === 'lutas' ? 'active' : ''}`} onClick={() => setActiveTab('lutas')}>Lutas</button>
+          <button className={`tab ${activeTab === 'apostas' ? 'active' : ''}`} onClick={() => setActiveTab('apostas')}>Apostas</button>
+        </div>
+
+        <main>
+          {activeTab === 'apostadores' && <ApostadoresPanel />}
+          {activeTab === 'lutadores' && <LutadoresPanel />}
+          {activeTab === 'lutas' && <LutasPanel />}
+          {activeTab === 'apostas' && <ApostasPanel />}
+        </main>
+      </div>
+    </>
   );
 }
 
