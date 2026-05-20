@@ -1,6 +1,6 @@
 export const API_APOSTADORES = 'https://api-sd-df8o.onrender.com';
 
-async function request(endpoint: string, options: RequestInit = {}) {
+async function request(endpoint, options = {}) {
   const res = await fetch(`${API_APOSTADORES}${endpoint}`, {
     ...options,
     headers: {
@@ -20,7 +20,7 @@ async function request(endpoint: string, options: RequestInit = {}) {
 
 export const ApostadoresService = {
   listarTodos: async () => request(`/apostadores/`),
-  criar: async (data: { nome: string, idade: number, chave_pix: string }) => request(`/apostadores/`, { method: 'POST', body: JSON.stringify(data) }),
-  atualizar: async (id: number | string, data: any) => request(`/apostadores/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deletar: async (id: number | string) => request(`/apostadores/${id}`, { method: 'DELETE' })
+  criar: async (data) => request(`/apostadores/`, { method: 'POST', body: JSON.stringify(data) }),
+  atualizar: async (id, data) => request(`/apostadores/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deletar: async (id) => request(`/apostadores/${id}`, { method: 'DELETE' })
 };
