@@ -5,6 +5,112 @@ import { useState, useEffect } from 'react';
 export default function Page() {
   const [activeTab, setActiveTab] = useState('apostadores');
   
+  // Estados de autenticação global
+  const [autenticado, setAutenticado] = useState(null); // null = verificando
+  const [loginForm, setLoginForm] = useState({ usuario: '', senha: '' });
+  const [loginErro, setLoginErro] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  // Ao montar, verifica se já está autenticado no servidor
+  useEffect(() => {
+    fetch('/api/auth/apostas')
+      .then(res => res.json())
+      .then(d => setAutenticado(d.autenticado))
+      .catch(() => setAutenticado(false));
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    setLoginErro('');
+    try {
+      const res = await fetch('/api/auth/apostas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginForm)
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'Erro ao fazer login.');
+      setAutenticado(true);
+    } catch (err) {
+      setLoginErro(err.message);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  // ── Verificando autenticação inicial ──
+  if (autenticado === null) {
+    return (
+      <div className="container">
+        <header>
+          <h1>FightBet Hub</h1>
+          <p className="subtitle">Painel Integrador de Apostas e Lutas</p>
+        </header>
+        <div className="panel"><div className="loading">Verificando sessão...</div></div>
+      </div>
+    );
+  }
+
+  // ── Tela de Login Global ──
+  if (!autenticado) {
+    return (
+      <div className="container">
+        <header>
+          <h1>FightBet Hub</h1>
+          <p className="subtitle">Painel Integrador de Apostas e Lutas</p>
+        </header>
+        <div className="panel" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
+          <div className="login-container">
+            <div className="login-card">
+              <div className="login-icon">🔐</div>
+              <h2>Acesso ao Sistema</h2>
+              <p className="login-desc">
+                Faça login para acessar o painel integrador.<br/>
+                O acesso será válido para todas as abas.
+              </p>
+              <form onSubmit={handleLogin} className="login-form">
+                <div className="form-group">
+                  <label>Usuário</label>
+                  <input
+                    id="global-usuario"
+                    required
+                    autoFocus
+                    placeholder="Seu usuário"
+                    value={loginForm.usuario}
+                    onChange={e => setLoginForm({...loginForm, usuario: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Senha</label>
+                  <input
+                    id="global-senha"
+                    type="password"
+                    required
+                    placeholder="Sua senha"
+                    value={loginForm.senha}
+                    onChange={e => setLoginForm({...loginForm, senha: e.target.value})}
+                  />
+                </div>
+                {loginErro && <div className="login-erro">{loginErro}</div>}
+                <button
+                  type="submit"
+                  className="btn btn-full"
+                  disabled={loginLoading}
+                >
+                  {loginLoading ? 'Autenticando...' : 'Entrar'}
+                </button>
+                <p className="login-hint">
+                  Se não tiver conta, ela será criada automaticamente.
+                </p>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container">
       <header>
@@ -33,7 +139,7 @@ export default function Page() {
 // APOSTADORES PANEL
 // ----------------------------------------------------
 function ApostadoresPanel() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({ nome: '', idade: '', chave_pix: '' });
@@ -48,7 +154,7 @@ function ApostadoresPanel() {
 
   useEffect(() => { loadData(); }, []);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     await fetch('/api/apostadores', {
       method: 'POST',
@@ -60,7 +166,7 @@ function ApostadoresPanel() {
     loadData();
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id) => {
     if(confirm('Tem certeza?')) {
       await fetch(`/api/apostadores/${id}`, { method: 'DELETE' });
       loadData();
@@ -125,22 +231,28 @@ function ApostadoresPanel() {
 // LUTADORES PANEL
 // ----------------------------------------------------
 function LutadoresPanel() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({ nome: '', apelido: '', categoria: '1', arte: '1' });
 
   const loadData = () => {
     setLoading(true);
+    setErro('');
     fetch('/api/lutadores')
       .then(res => res.json())
-      .then(d => { setData(Array.isArray(d) ? d : []); setLoading(false); })
-      .catch(e => { console.error(e); setLoading(false); });
+      .then(d => {
+        if (d && d.error) { setErro(d.error); setData([]); }
+        else { setData(Array.isArray(d) ? d : []); }
+        setLoading(false);
+      })
+      .catch(e => { setErro(e.message); setLoading(false); });
   };
 
   useEffect(() => { loadData(); }, []);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     await fetch('/api/lutadores', {
       method: 'POST',
@@ -152,7 +264,7 @@ function LutadoresPanel() {
     loadData();
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id) => {
     if(confirm('Tem certeza?')) {
       await fetch(`/api/lutadores/${id}`, { method: 'DELETE' });
       loadData();
@@ -162,7 +274,17 @@ function LutadoresPanel() {
   return (
     <div className="panel">
       <h2>Lutadores <button className="btn" onClick={() => setModalOpen(true)}>+ Novo</button></h2>
-      {loading ? <div className="loading">Carregando (RSA Decryption)...</div> : (
+
+      {loading ? (
+        <div className="loading">Carregando (Handshake RSA)...</div>
+      ) : erro ? (
+        <div className="api-erro">
+          <div className="api-erro-icon">⚠️</div>
+          <p><strong>Erro ao conectar com a API de Lutadores</strong></p>
+          <p className="api-erro-msg">{erro}</p>
+          <button className="btn" onClick={loadData}>↻ Tentar novamente</button>
+        </div>
+      ) : (
         <div className="table-wrapper">
           <table>
             <thead><tr><th>ID</th><th>Nome</th><th>Apelido</th><th>Categoria</th><th>Arte</th><th>Ações</th></tr></thead>
@@ -230,7 +352,7 @@ function LutadoresPanel() {
 // LUTAS PANEL
 // ----------------------------------------------------
 function LutasPanel() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({ horario: '20:00:00', data: '2025-06-15', lutador1: '', lutador2: '' });
@@ -245,7 +367,7 @@ function LutasPanel() {
 
   useEffect(() => { loadData(); }, []);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     await fetch('/api/lutas', {
       method: 'POST',
@@ -257,7 +379,7 @@ function LutasPanel() {
     loadData();
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id) => {
     if(confirm('Tem certeza?')) {
       await fetch(`/api/lutas/${id}`, { method: 'DELETE' });
       loadData();
@@ -327,7 +449,8 @@ function LutasPanel() {
 // APOSTAS PANEL
 // ----------------------------------------------------
 function ApostasPanel() {
-  const [data, setData] = useState<any[]>([]);
+  // Estados de dados
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({ valor: '', id_luta: '', id_lutador: '', id_apostador: '' });
@@ -342,7 +465,7 @@ function ApostasPanel() {
 
   useEffect(() => { loadData(); }, []);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     await fetch('/api/apostas', {
       method: 'POST',
@@ -359,7 +482,7 @@ function ApostasPanel() {
     loadData();
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id) => {
     if(confirm('Tem certeza?')) {
       await fetch(`/api/apostas/${id}`, { method: 'DELETE' });
       loadData();
