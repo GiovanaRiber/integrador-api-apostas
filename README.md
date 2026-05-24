@@ -20,7 +20,8 @@ O painel se comunica simultaneamente com os seguintes serviços:
 
 3. **Lutas** (`/api/lutas`)
    - Objetivo: Gerenciar a marcação de embates (data, horário e os IDs dos lutadores envolvidos).
-   - Segurança: Requer validação via chave de API estática (`X-API-KEY`) embutida nos cabeçalhos das requisições pelo backend.
+   - Segurança: Integra duas APIs de lutas em paralelo, com fallback automático e normalização entre `lutador1/lutador2` e `id_lutador1/id_lutador2`.
+   - Segurança: Requer a chave privada RSA no backend (`PRIVATE_KEY_PEM` ou `private_key.pem`) para assinar as requisições do foguinho, além da chave de API estática (`X-API-KEY`) para o backend bet3M.
 
 4. **Apostas** (`/api/apostas`)
    - Objetivo: Registrar e listar transações financeiras e o vínculo entre o apostador, o lutador escolhido e a luta.

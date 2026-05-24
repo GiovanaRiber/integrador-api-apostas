@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState('apostadores');
@@ -147,15 +147,18 @@ function ApostadoresPanel() {
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({ nome: '', idade: '', chave_pix: '' });
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     setLoading(true);
     fetch('/api/apostadores')
       .then(res => res.json())
       .then(d => { setData(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(e => { console.error(e); setLoading(false); });
-  };
+  }, []);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => { loadData(); }, 0);
+    return () => clearTimeout(t);
+  }, [loadData]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -240,7 +243,7 @@ function LutadoresPanel() {
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({ nome: '', apelido: '', categoria: '1', arte: '1' });
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     setLoading(true);
     setErro('');
     fetch('/api/lutadores')
@@ -251,9 +254,12 @@ function LutadoresPanel() {
         setLoading(false);
       })
       .catch(e => { setErro(e.message); setLoading(false); });
-  };
+  }, []);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => { loadData(); }, 0);
+    return () => clearTimeout(t);
+  }, [loadData]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -360,15 +366,18 @@ function LutasPanel() {
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({ horario: '20:00:00', data: '2025-06-15', lutador1: '', lutador2: '' });
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     setLoading(true);
     fetch('/api/lutas')
       .then(res => res.json())
       .then(d => { setData(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(e => { console.error(e); setLoading(false); });
-  };
+  }, []);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => { loadData(); }, 0);
+    return () => clearTimeout(t);
+  }, [loadData]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -458,15 +467,18 @@ function ApostasPanel() {
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({ valor: '', id_luta: '', id_lutador: '', id_apostador: '' });
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     setLoading(true);
     fetch('/api/apostas')
       .then(res => res.json())
       .then(d => { setData(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(e => { console.error(e); setLoading(false); });
-  };
+  }, []);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => { loadData(); }, 0);
+    return () => clearTimeout(t);
+  }, [loadData]);
 
   const handleSave = async (e) => {
     e.preventDefault();
