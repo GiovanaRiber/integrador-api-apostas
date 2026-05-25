@@ -1,22 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { login, isAutenticado } from '@/lib/api';
+import { ApostasService } from '@/lib/api-apostas';
+import { ApostadoresService } from '@/lib/api-apostadores';
+import { LutadoresService } from '@/lib/api-lutadores';
+import { LutasService } from '@/lib/api-lutas';
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState('apostadores');
-  
+
   // Estados de autenticação global
   const [autenticado, setAutenticado] = useState(null); // null = verificando
   const [loginForm, setLoginForm] = useState({ usuario: '', senha: '' });
   const [loginErro, setLoginErro] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  // Ao montar, verifica se já está autenticado no servidor
+  // Ao montar, verifica se já está autenticado (token em memória do módulo)
   useEffect(() => {
-    fetch('/api/auth/apostas')
-      .then(res => res.json())
-      .then(d => setAutenticado(d.autenticado))
-      .catch(() => setAutenticado(false));
+    setAutenticado(isAutenticado());
   }, []);
 
   const handleLogin = async (e) => {
@@ -24,13 +26,7 @@ export default function Page() {
     setLoginLoading(true);
     setLoginErro('');
     try {
-      const res = await fetch('/api/auth/apostas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginForm)
-      });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || 'Erro ao fazer login.');
+      await login(loginForm.usuario, loginForm.senha);
       setAutenticado(true);
     } catch (err) {
       setLoginErro(err.message);
@@ -149,8 +145,7 @@ function ApostadoresPanel() {
 
   const loadData = () => {
     setLoading(true);
-    fetch('/api/apostadores')
-      .then(res => res.json())
+    ApostadoresService.listarTodos()
       .then(d => { setData(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(e => { console.error(e); setLoading(false); });
   };
@@ -159,11 +154,7 @@ function ApostadoresPanel() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    await fetch('/api/apostadores', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...formData, idade: Number(formData.idade) })
-    });
+    await ApostadoresService.criar({ ...formData, idade: Number(formData.idade) });
     setModalOpen(false);
     setFormData({ nome: '', idade: '', chave_pix: '' });
     loadData();
@@ -171,7 +162,7 @@ function ApostadoresPanel() {
 
   const handleDelete = async (id) => {
     if(confirm('Tem certeza?')) {
-      await fetch(`/api/apostadores/${id}`, { method: 'DELETE' });
+      await ApostadoresService.deletar(id);
       loadData();
     }
   };
@@ -243,8 +234,7 @@ function LutadoresPanel() {
   const loadData = () => {
     setLoading(true);
     setErro('');
-    fetch('/api/lutadores')
-      .then(res => res.json())
+    LutadoresService.listarTodos()
       .then(d => {
         if (d && d.error) { setErro(d.error); setData([]); }
         else { setData(Array.isArray(d) ? d : []); }
@@ -257,11 +247,7 @@ function LutadoresPanel() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    await fetch('/api/lutadores', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    });
+    await LutadoresService.criar(formData);
     setModalOpen(false);
     setFormData({ nome: '', apelido: '', categoria: '1', arte: '1' });
     loadData();
@@ -269,7 +255,7 @@ function LutadoresPanel() {
 
   const handleDelete = async (id) => {
     if(confirm('Tem certeza?')) {
-      await fetch(`/api/lutadores/${id}`, { method: 'DELETE' });
+      await LutadoresService.deletar(id);
       loadData();
     }
   };
@@ -279,7 +265,7 @@ function LutadoresPanel() {
       <h2>Lutadores <button className="btn" onClick={() => setModalOpen(true)}>+ Novo</button></h2>
 
       {loading ? (
-        <div className="loading">Carregando (Handshake RSA)...</div>
+        <div className="loading">Carregando...</div>
       ) : erro ? (
         <div className="api-erro">
           <div className="api-erro-icon">⚠️</div>
@@ -362,8 +348,7 @@ function LutasPanel() {
 
   const loadData = () => {
     setLoading(true);
-    fetch('/api/lutas')
-      .then(res => res.json())
+    LutasService.listarTodas()
       .then(d => { setData(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(e => { console.error(e); setLoading(false); });
   };
@@ -372,11 +357,7 @@ function LutasPanel() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    await fetch('/api/lutas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...formData, lutador1: Number(formData.lutador1), lutador2: Number(formData.lutador2) })
-    });
+    await LutasService.criar({ ...formData, lutador1: Number(formData.lutador1), lutador2: Number(formData.lutador2) });
     setModalOpen(false);
     setFormData({ horario: '20:00:00', data: '2025-06-15', lutador1: '', lutador2: '' });
     loadData();
@@ -384,7 +365,7 @@ function LutasPanel() {
 
   const handleDelete = async (id) => {
     if(confirm('Tem certeza?')) {
-      await fetch(`/api/lutas/${id}`, { method: 'DELETE' });
+      await LutasService.deletar(id);
       loadData();
     }
   };
@@ -452,7 +433,6 @@ function LutasPanel() {
 // APOSTAS PANEL
 // ----------------------------------------------------
 function ApostasPanel() {
-  // Estados de dados
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -460,8 +440,7 @@ function ApostasPanel() {
 
   const loadData = () => {
     setLoading(true);
-    fetch('/api/apostas')
-      .then(res => res.json())
+    ApostasService.listarTodas()
       .then(d => { setData(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(e => { console.error(e); setLoading(false); });
   };
@@ -470,15 +449,11 @@ function ApostasPanel() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    await fetch('/api/apostas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        valor: Number(formData.valor), 
-        id_luta: Number(formData.id_luta), 
-        id_lutador: Number(formData.id_lutador), 
-        id_apostador: Number(formData.id_apostador) 
-      })
+    await ApostasService.criar({
+      valor: Number(formData.valor),
+      id_luta: Number(formData.id_luta),
+      id_lutador: Number(formData.id_lutador),
+      id_apostador: Number(formData.id_apostador)
     });
     setModalOpen(false);
     setFormData({ valor: '', id_luta: '', id_lutador: '', id_apostador: '' });
@@ -487,7 +462,7 @@ function ApostasPanel() {
 
   const handleDelete = async (id) => {
     if(confirm('Tem certeza?')) {
-      await fetch(`/api/apostas/${id}`, { method: 'DELETE' });
+      await ApostasService.deletar(id);
       loadData();
     }
   };

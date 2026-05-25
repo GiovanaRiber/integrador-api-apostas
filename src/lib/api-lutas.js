@@ -1,29 +1,9 @@
-export const API_LUTAS = 'https://bet3m-production.up.railway.app';
-const API_KEY = 'bet3M-UENP';
-
-async function request(endpoint, options = {}) {
-  const res = await fetch(`${API_LUTAS}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-KEY': API_KEY,
-      ...(options.headers || {})
-    }
-  });
-
-  if (!res.ok) {
-    let msg = await res.text();
-    throw new Error(`API Lutas Error: ${res.status} - ${msg}`);
-  }
-
-  const text = await res.text();
-  return text ? JSON.parse(text) : {};
-}
+import { fetchAPI } from './api';
 
 export const LutasService = {
-  listarTodas: async () => request(`/lutas`),
-  buscarPorId: async (id) => request(`/lutas/${id}`),
-  criar: async (data) => request(`/lutas`, { method: 'POST', body: JSON.stringify(data) }),
-  atualizar: async (id, data) => request(`/lutas/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deletar: async (id) => request(`/lutas/${id}`, { method: 'DELETE' })
+  listarTodas: async () => fetchAPI(`/lutas`),
+  buscarPorId: async (id) => fetchAPI(`/lutas/${id}`),
+  criar: async (data) => fetchAPI(`/lutas`, { method: 'POST', body: JSON.stringify(data) }),
+  atualizar: async (id, data) => fetchAPI(`/lutas/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deletar: async (id) => fetchAPI(`/lutas/${id}`, { method: 'DELETE' })
 };
